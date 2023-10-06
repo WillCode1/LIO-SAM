@@ -1,17 +1,22 @@
 #include "utility.h"
 #include "lio_sam/cloud_info.h"
 
+// #define VEL_TIMESTAMP_TYPE float
+#define VEL_TIMESTAMP_TYPE double
+// #define VEL_TIMESTAMP_FIELD time
+#define VEL_TIMESTAMP_FIELD timestamp
+
 struct VelodynePointXYZIRT
 {
     PCL_ADD_POINT4D
     PCL_ADD_INTENSITY;
     uint16_t ring;
-    float time;
+    VEL_TIMESTAMP_TYPE VEL_TIMESTAMP_FIELD;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 POINT_CLOUD_REGISTER_POINT_STRUCT (VelodynePointXYZIRT,
     (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
-    (uint16_t, ring, ring) (float, time, time)
+    (uint16_t, ring, ring) (VEL_TIMESTAMP_TYPE, VEL_TIMESTAMP_FIELD, VEL_TIMESTAMP_FIELD)
 )
 
 struct OusterPointXYZIRT {
@@ -207,6 +212,11 @@ public:
         if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX)
         {
             pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);
+            auto offset_timestamp = laserCloudIn->points[0].VEL_TIMESTAMP_FIELD;
+            for (size_t i = 0; i < laserCloudIn->size(); i++)
+            {
+                laserCloudIn->points[i].VEL_TIMESTAMP_FIELD -= offset_timestamp;
+            }
         }
         else if (sensor == SensorType::OUSTER)
         {
@@ -223,7 +233,7 @@ public:
                 dst.z = src.z;
                 dst.intensity = src.intensity;
                 dst.ring = src.ring;
-                dst.time = src.t * 1e-9f;
+                dst.VEL_TIMESTAMP_FIELD = src.t * 1e-9f;
             }
         }
         else
@@ -235,7 +245,7 @@ public:
         // get timestamp
         cloudHeader = currentCloudMsg.header;
         timeScanCur = cloudHeader.stamp.toSec();
-        timeScanEnd = timeScanCur + laserCloudIn->points.back().time;
+        timeScanEnd = timeScanCur + laserCloudIn->points.back().VEL_TIMESTAMP_FIELD;
 
         // check dense flag
         if (laserCloudIn->is_dense == false)
@@ -270,7 +280,7 @@ public:
             deskewFlag = -1;
             for (auto &field : currentCloudMsg.fields)
             {
-                if (field.name == "time" || field.name == "t")
+                if (field.name == "time" || field.name == "t" || field.name == "timestamp")
                 {
                     deskewFlag = 1;
                     break;
@@ -562,7 +572,7 @@ public:
             if (rangeMat.at<float>(rowIdn, columnIdn) != FLT_MAX)
                 continue;
 
-            thisPoint = deskewPoint(&thisPoint, laserCloudIn->points[i].time);
+            thisPoint = deskewPoint(&thisPoint, laserCloudIn->points[i].VEL_TIMESTAMP_FIELD);
 
             rangeMat.at<float>(rowIdn, columnIdn) = range;
 
