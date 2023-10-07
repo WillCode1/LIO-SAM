@@ -88,6 +88,7 @@ public:
 
     // Save pcd
     bool savePCD;
+    bool saveKeyFramesPCD;
     string savePCDDirectory;
 
     // Lidar Sensor Configuration
@@ -99,6 +100,7 @@ public:
     float lidarMaxRange;
 
     // IMU
+    bool accUseGravityUnit;
     float imuAccNoise;
     float imuGyrNoise;
     float imuAccBiasN;
@@ -170,7 +172,9 @@ public:
         nh.param<float>("lio_sam/gpsCovThreshold", gpsCovThreshold, 2.0);
         nh.param<float>("lio_sam/poseCovThreshold", poseCovThreshold, 25.0);
 
+        nh.param<bool>("lio_sam/accUseGravityUnit", accUseGravityUnit, false);
         nh.param<bool>("lio_sam/savePCD", savePCD, false);
+        nh.param<bool>("lio_sam/saveKeyFramesPCD", saveKeyFramesPCD, false);
         nh.param<std::string>("lio_sam/savePCDDirectory", savePCDDirectory, "/Downloads/LOAM/");
 
         std::string sensorStr;
@@ -249,12 +253,19 @@ public:
         usleep(100);
     }
 
+    /*
+        imuConverter函数，这个函数之后会被频繁调用。它主要的作用，是把IMU的信息，从IMU坐标系，转换到雷达坐标系。
+        注意，这个函数只旋转，没有平移，和真正的雷达坐标系之间还是差了一个平移的。
+        至于为什么没有平移，先提前剧透一下，在imuPreintegration.cpp文件中，还有两个imu2Lidar，lidar2imu变量，这俩变量只有平移，没有旋转。
+        事实上，作者后续是把imu数据先用imuConverter旋转到雷达系下（但其实还差了个平移）。然后他把雷达数据又根据lidar2Imu反向平移了一下，和转换以后差了个平移的imu数据在“中间系”对齐，之后算完又从中间系通过imu2Lidar挪回了雷达系进行publish。
+     */
     sensor_msgs::Imu imuConverter(const sensor_msgs::Imu& imu_in)
     {
+        double unit = accUseGravityUnit ? 9.8 : 1;
         sensor_msgs::Imu imu_out = imu_in;
         // rotate acceleration
         Eigen::Vector3d acc(imu_in.linear_acceleration.x, imu_in.linear_acceleration.y, imu_in.linear_acceleration.z);
-        acc = extRot * acc;
+        acc = extRot * acc * unit;
         imu_out.linear_acceleration.x = acc.x();
         imu_out.linear_acceleration.y = acc.y();
         imu_out.linear_acceleration.z = acc.z();
@@ -333,13 +344,13 @@ void imuRPY2rosRPY(sensor_msgs::Imu *thisImuMsg, T *rosRoll, T *rosPitch, T *ros
 }
 
 
-float pointDistance(PointType p)
+float pointDistance(const PointType& p)
 {
     return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
 }
 
 
-float pointDistance(PointType p1, PointType p2)
+float pointDistance(const PointType& p1, const PointType& p2)
 {
     return sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)*(p1.z-p2.z));
 }
