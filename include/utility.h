@@ -344,4 +344,15 @@ float pointDistance(PointType p1, PointType p2)
     return sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)*(p1.z-p2.z));
 }
 
+void save_trajectory(FILE *fp, const Eigen::Vector3d &pos, const Eigen::Quaterniond &quat, const double &time, int save_traj_fmt = 1)
+{
+    if (save_traj_fmt == 1)
+    {
+        fprintf(fp, "%0.4lf %0.4f %0.4f %0.4f %0.4f %0.4f %0.4f %0.4f\n", time,
+                pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
+    }
+
+    fflush(fp);
+}
+
 #endif

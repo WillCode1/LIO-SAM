@@ -153,6 +153,8 @@ public:
     Eigen::Affine3f incrementalOdometryAffineFront;
     Eigen::Affine3f incrementalOdometryAffineBack;
 
+    FILE *file_pose_unoptimized;
+    FILE *file_pose_optimized;
 
     mapOptimization()
     {
@@ -189,6 +191,31 @@ public:
         downSizeFilterSurroundingKeyPoses.setLeafSize(surroundingKeyframeDensity, surroundingKeyframeDensity, surroundingKeyframeDensity); // for surrounding key poses of scan-to-map optimization
 
         allocateMemory();
+
+#if 1
+        auto saveMapDirectory = get_save_path();
+        int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());
+        unused = system((std::string("mkdir -p ") + saveMapDirectory).c_str());
+
+        file_pose_unoptimized = fopen((saveMapDirectory + "keyframe_pose.txt").c_str(), "w");
+        file_pose_optimized = fopen((saveMapDirectory + "keyframe_pose_optimized.txt").c_str(), "w");
+
+        fprintf(file_pose_unoptimized, "# keyframe trajectory unoptimized\n# timestamp tx ty tz qx qy qz qw\n");
+        fprintf(file_pose_optimized, "# keyframe trajectory optimized\n# timestamp tx ty tz qx qy qz qw\n");
+#endif
+    }
+
+    ~mapOptimization()
+    {
+#if 1
+        fclose(file_pose_unoptimized);
+        fclose(file_pose_optimized);
+#endif
+    }
+
+    std::string get_save_path()
+    {
+        return std::getenv("HOME") + savePCDDirectory + "/";
     }
 
     void allocateMemory()
@@ -361,9 +388,22 @@ public:
       if(req.destination.empty()) saveMapDirectory = std::getenv("HOME") + savePCDDirectory;
       else saveMapDirectory = std::getenv("HOME") + req.destination;
       cout << "Save destination: " << saveMapDirectory << endl;
+#if 1
+      for (auto i = 0; i < cloudKeyPoses6D->points.size(); ++i)
+      {
+          const auto &pose = cloudKeyPoses6D->points[i];
+          auto orientation = tf::createQuaternionMsgFromRollPitchYaw(pose.roll, pose.pitch, pose.yaw);
+          Eigen::Quaterniond quat(orientation.w, orientation.x, orientation.y, orientation.z);
+          const auto &pos = Eigen::Vector3d(pose.x, pose.y, pose.z);
+          save_trajectory(file_pose_optimized, pos, quat, pose.time);
+      }
+      cout << "****************************************************" << endl;
+      cout << "Saving file_pose_optimized completed\n" << endl;
+#elif
       // create directory and remove old files;
       int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());
       unused = system((std::string("mkdir -p ") + saveMapDirectory).c_str());
+#endif
       // save key frame transformations
       pcl::io::savePCDFileBinary(saveMapDirectory + "/trajectory.pcd", *cloudKeyPoses3D);
       pcl::io::savePCDFileBinary(saveMapDirectory + "/transformations.pcd", *cloudKeyPoses6D);
@@ -1375,6 +1415,11 @@ public:
             sqrt(x*x + y*y + z*z) < surroundingkeyframeAddingDistThreshold)
             return false;
 
+#if 1
+        auto orientation = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
+        Eigen::Quaterniond quat(orientation.w, orientation.x, orientation.y, orientation.z);
+        save_trajectory(file_pose_unoptimized, Eigen::Vector3d(x, y, z), quat, cloudKeyPoses6D->back().time);
+#endif
         return true;
     }
 
