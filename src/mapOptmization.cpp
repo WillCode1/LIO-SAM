@@ -902,8 +902,7 @@ public:
                     float pd2 = pa * pointSel.x + pb * pointSel.y + pc * pointSel.z + pd;
 
                     // 距离越大，s越小，是个距离惩罚因子（权重），相当于协方差矩阵的逆
-                    // float s = 1 - 0.9 * fabs(pd2) / sqrt(sqrt(pointSel.x * pointSel.x + pointSel.y * pointSel.y + pointSel.z * pointSel.z));
-                    float s = 1 - 0.9 * fabs(pd2);
+                    float s = 1 - 0.9 * fabs(pd2) / sqrt(sqrt(pointOri.x * pointOri.x + pointOri.y * pointOri.y + pointOri.z * pointOri.z));
                     // 点到平面垂线单位法向量(即平面方程系数, 用于表示偏导数)
                     coeff.x = s * pa;
                     coeff.y = s * pb;
