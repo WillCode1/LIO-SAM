@@ -1303,7 +1303,8 @@ public:
         if (cloudKeyPoses3D->points.empty())
         {
             // 第一帧初始化先验因子
-            noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-2, 1e-2, M_PI * M_PI, 1e8, 1e8, 1e8).finished()); // rad*rad, meter*meter
+            // noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-2, 1e-2, M_PI * M_PI, 1e8, 1e8, 1e8).finished()); // rad*rad, meter*meter
+            noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-12, 1e-12, 1e-12, 1e-12, 1e-12, 1e-12).finished()); // rad*rad, meter*meter
             gtSAMgraph.add(PriorFactor<Pose3>(0, trans2gtsamPose(transformTobeMapped), priorNoise));
             // 变量节点设置初始值
             initialEstimate.insert(0, trans2gtsamPose(transformTobeMapped));
@@ -1317,6 +1318,22 @@ public:
             // 参数：前一帧id，当前帧id，前一帧与当前帧的位姿变换（作为观测值），噪声协方差
             gtSAMgraph.add(BetweenFactor<Pose3>(cloudKeyPoses3D->size() - 1, cloudKeyPoses3D->size(), poseFrom.between(poseTo), odometryNoise));
             // 变量节点设置初始值
+
+#ifdef Ground_Constraint
+            noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-12).finished());
+            PointXYZIRPYT ground_constraint_pose;
+            ground_constraint_pose.x = transformTobeMapped[3];
+            ground_constraint_pose.y = transformTobeMapped[4];
+            ground_constraint_pose.z = cloudKeyPoses6D->points.back().z;
+            // ground_constraint_pose.roll = cloudKeyPoses6D->points.back().roll;
+            // ground_constraint_pose.pitch = cloudKeyPoses6D->points.back().pitch;
+            ground_constraint_pose.roll = transformTobeMapped[0];
+            ground_constraint_pose.pitch = transformTobeMapped[1];
+            ground_constraint_pose.yaw = transformTobeMapped[2];
+            gtsam::Pose3 ground_constraint = pclPointTogtsamPose3(ground_constraint_pose);
+            gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(cloudKeyPoses6D->size() - 1, cloudKeyPoses6D->size(), poseFrom.between(ground_constraint), ground_constraint_noise));
+            aLoopIsClosed = true;
+#endif
             initialEstimate.insert(cloudKeyPoses3D->size(), poseTo);
         }
     }

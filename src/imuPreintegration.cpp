@@ -478,6 +478,14 @@ public:
         gtsam::Pose3 curPose = lidarPose.compose(lidar2Imu);
         gtsam::PriorFactor<gtsam::Pose3> pose_factor(X(key), curPose, degenerate ? correctionNoise2 : correctionNoise);
         graphFactors.add(pose_factor);
+
+#ifdef Ground_Constraint
+        gtsam::Pose3 ground_constraint = gtsam::Pose3(gtsam::Rot3::RzRyRx(double(curPose.rotation().roll()), double(curPose.rotation().pitch()), double(curPose.rotation().yaw())),
+                                                      gtsam::Point3(double(curPose.translation().x()), double(curPose.translation().y()), double(prevPose_.translation().z())));
+        gtsam::noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 0.05, 0.05, 0.05, 0.1, 0.1, 0.001).finished());
+        graphFactors.add(gtsam::BetweenFactor<gtsam::Pose3>(X(key - 1), X(key), prevPose_.between(ground_constraint), ground_constraint_noise));
+#endif
+
         // insert predicted values
         // 用前一帧的状态、偏置，施加imu预积分量，得到当前帧的状态(imu预积分测量值)
         gtsam::NavState propState_ = imuIntegratorOpt_->predict(prevState_, prevBias_);
@@ -488,6 +496,11 @@ public:
         // optimize
         optimizer.update(graphFactors, graphValues);
         optimizer.update();
+#ifdef Ground_Constraint
+        optimizer.update();
+        optimizer.update();
+        optimizer.update();
+#endif
         graphFactors.resize(0);
         graphValues.clear();
         // Overwrite the beginning of the preintegration for the next step.
