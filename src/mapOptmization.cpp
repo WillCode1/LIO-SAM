@@ -1320,7 +1320,7 @@ public:
             // 变量节点设置初始值
 
 #ifdef Ground_Constraint
-            noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-12).finished());
+            noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e6, 1e6, 1e6, 1e6, 1e6, 1e-12).finished());
             PointXYZIRPYT ground_constraint_pose;
             ground_constraint_pose.x = transformTobeMapped[3];
             ground_constraint_pose.y = transformTobeMapped[4];

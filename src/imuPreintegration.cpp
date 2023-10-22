@@ -482,7 +482,7 @@ public:
 #ifdef Ground_Constraint
         gtsam::Pose3 ground_constraint = gtsam::Pose3(gtsam::Rot3::RzRyRx(double(curPose.rotation().roll()), double(curPose.rotation().pitch()), double(curPose.rotation().yaw())),
                                                       gtsam::Point3(double(curPose.translation().x()), double(curPose.translation().y()), double(prevPose_.translation().z())));
-        gtsam::noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 0.05, 0.05, 0.05, 0.1, 0.1, 1e-3).finished());
+        gtsam::noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1, 1, 1, 1, 1, 1e-3).finished());
         graphFactors.add(gtsam::BetweenFactor<gtsam::Pose3>(X(key - 1), X(key), prevPose_.between(ground_constraint), ground_constraint_noise));
 #endif
 
