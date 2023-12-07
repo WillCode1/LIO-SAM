@@ -1643,7 +1643,7 @@ public:
         static int lastSLAMInfoPubSize = -1;
         if (pubSLAMInfo.getNumSubscribers() != 0)
         {
-            if (lastSLAMInfoPubSize != cloudKeyPoses6D->size())
+            if (lastSLAMInfoPubSize != (int)cloudKeyPoses6D->size())
             {
                 lio_sam::cloud_info slamInfo;
                 slamInfo.header.stamp = timeLaserInfoStamp;
@@ -1755,7 +1755,7 @@ public:
         cout << "Saving map to pcd files ..." << endl;
         cout << "Save destination: " << saveMapDirectory << endl;
 #if 1
-        for (auto i = 0; i < cloudKeyPoses6D->points.size(); ++i)
+        for (auto i = 0; i < (int)cloudKeyPoses6D->points.size(); ++i)
         {
             const auto &pose = cloudKeyPoses6D->points[i];
             auto orientation = tf::createQuaternionMsgFromRollPitchYaw(pose.roll, pose.pitch, pose.yaw);
