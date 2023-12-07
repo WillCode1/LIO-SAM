@@ -102,7 +102,7 @@ public:
     float lidarMaxRange;
 
     // IMU
-    bool accUseGravityUnit;
+    float gravityUnit;
     float imuAccNoise;
     float imuGyrNoise;
     float imuAccBiasN;
@@ -174,7 +174,7 @@ public:
         nh.param<float>("lio_sam/gpsCovThreshold", gpsCovThreshold, 2.0);
         nh.param<float>("lio_sam/poseCovThreshold", poseCovThreshold, 25.0);
 
-        nh.param<bool>("lio_sam/accUseGravityUnit", accUseGravityUnit, false);
+        nh.param<float>("lio_sam/gravityUnit", gravityUnit, 1);
         nh.param<bool>("lio_sam/savePCD", savePCD, false);
         nh.param<bool>("lio_sam/saveKeyFramesPCD", saveKeyFramesPCD, false);
         nh.param<std::string>("lio_sam/savePCDDirectory", savePCDDirectory, "/Downloads/LOAM/");
@@ -263,11 +263,10 @@ public:
      */
     sensor_msgs::Imu imuConverter(const sensor_msgs::Imu& imu_in)
     {
-        double unit = accUseGravityUnit ? 9.8 : 1;
         sensor_msgs::Imu imu_out = imu_in;
         // rotate acceleration
         Eigen::Vector3d acc(imu_in.linear_acceleration.x, imu_in.linear_acceleration.y, imu_in.linear_acceleration.z);
-        acc = extRot * acc * unit;
+        acc = extRot * acc * gravityUnit;
         imu_out.linear_acceleration.x = acc.x();
         imu_out.linear_acceleration.y = acc.y();
         imu_out.linear_acceleration.z = acc.z();

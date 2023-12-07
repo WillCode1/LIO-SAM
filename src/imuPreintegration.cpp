@@ -56,7 +56,7 @@ public:
                 // lidar系到baselink系的变换
                 tfListener.lookupTransform(lidarFrame, baselinkFrame, ros::Time(0), lidar2Baselink);
             }
-            catch (tf::TransformException ex)
+            catch (tf::TransformException &ex)
             {
                 ROS_ERROR("%s", ex.what());
             }
