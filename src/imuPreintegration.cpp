@@ -693,15 +693,6 @@ public:
     }
 };
 
-// 还有两个问题：
-// 1.为什么imu原始数据先要根据imuConverter变到lidar系：用于去畸变
-// 在这处理的时候又是把lidar里程计的坐标系根据compose函数变到imu系：用于imu预积分
-
-// 2.变量gtsam::Pose3 imu2Lidar = gtsam::Pose3(gtsam::Rot3(1, 0, 0, 0),
-// gtsam::Point3(-extTrans.x(), -extTrans.y(), -extTrans.z()));
-// 这里为什么不用配置文件中的extRot，extQRPY之类的内容呢，而只是用了extTrans数据？
-
-//关于这点，我在github中找到了解释:https://github.com/TixiaoShan/LIO-SAM/issues/30,
 // imuConverter() to align the axis of the two coordinates,并没有涉及到平移,
 // lidar2Imu or imu2Lidar 却只有平移的内容
 //因此收到imu后，先用imuConverter()转换到雷达系下，（但其实和雷达之间仍然差了一个平移），
@@ -709,9 +700,6 @@ public:
 //（相当于是imu旋转到雷达系下以后不平移，然后把雷达倒着平移过来,在一个“中间系”对齐）。
 //在算完以后，等发布的时候，又用imu2Lidar又倒回到了正儿八经的雷达系。
 
-//那么tixiaoshan为什么在默认里把平移参数设置为0，0，0？
-//他在github中的解释为: 我在不同的数据集中改变了几次IMU的安装位置。但是位置总是靠近激光雷达。
-//所以每次测试不同的数据集时，我都不必费心去修改这个参数。严格地说，我的方法并不理想。需要提供此参数以获得更好的性能。
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "roboat_loam");
