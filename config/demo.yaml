@@ -37,7 +37,7 @@ lio_sam:
   imuGyrNoise: 1.7138381021653281e-03
   imuAccBiasN: 3.1255954720805698e-04
   imuGyrBiasN: 1.3365081877127647e-05
-  imuGravity: 9.80511
+  imuGravity: 9.80511                         # fixed!
   imuRPYWeight: 0.01
 
   # Extrinsics: T_lb (lidar -> imu)
@@ -76,7 +76,7 @@ lio_sam:
 
   # Loop closure
   loopClosureEnableFlag: true
-  loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
+  loopClosureFrequency: 5.0                     # Hz, regulate loop closure constraint add frequency
   surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
   historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
   historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be considered for loop closure

@@ -181,6 +181,7 @@ public:
 
     FILE *file_pose_unoptimized;
     FILE *file_pose_optimized;
+    bool keyframe_add_ground_constraint = false;
 
     mapOptimization()
     {
@@ -1320,19 +1321,25 @@ public:
             // 变量节点设置初始值
 
 #ifdef Ground_Constraint
-            noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e6, 1e6, 1e6, 1e6, 1e6, 1e-12).finished());
-            PointXYZIRPYT ground_constraint_pose;
-            ground_constraint_pose.x = transformTobeMapped[3];
-            ground_constraint_pose.y = transformTobeMapped[4];
-            ground_constraint_pose.z = cloudKeyPoses6D->points.back().z;
-            // ground_constraint_pose.roll = cloudKeyPoses6D->points.back().roll;
-            // ground_constraint_pose.pitch = cloudKeyPoses6D->points.back().pitch;
-            ground_constraint_pose.roll = transformTobeMapped[0];
-            ground_constraint_pose.pitch = transformTobeMapped[1];
-            ground_constraint_pose.yaw = transformTobeMapped[2];
-            gtsam::Pose3 ground_constraint = pclPointTogtsamPose3(ground_constraint_pose);
-            gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(cloudKeyPoses6D->size() - 1, cloudKeyPoses6D->size(), poseFrom.between(ground_constraint), ground_constraint_noise));
-            aLoopIsClosed = true;
+            // ROS_INFO("rpy = (%f, %f, %f)", RAD2DEG(cloudInfo.imuRollInit), RAD2DEG(cloudInfo.imuPitchInit), RAD2DEG(cloudInfo.imuYawInit));
+            bool add_ground_constraint = RAD2DEG(std::abs(cloudInfo.imuRollInit)) < 1 && RAD2DEG(std::abs(cloudInfo.imuPitchInit)) < 1;
+            if (keyframe_add_ground_constraint && add_ground_constraint)
+            {
+                noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-6, 1e-6, 1e6, 1e6, 1e6, 1e-6).finished());
+                PointXYZIRPYT ground_constraint_pose;
+                ground_constraint_pose.x = transformTobeMapped[3];
+                ground_constraint_pose.y = transformTobeMapped[4];
+                ground_constraint_pose.z = cloudKeyPoses6D->points.back().z;
+                ground_constraint_pose.roll = cloudInfo.imuRollInit;
+                ground_constraint_pose.pitch = cloudInfo.imuPitchInit;
+                // ground_constraint_pose.roll = transformTobeMapped[0];
+                // ground_constraint_pose.pitch = transformTobeMapped[1];
+                ground_constraint_pose.yaw = transformTobeMapped[2];
+                gtsam::Pose3 ground_constraint = pclPointTogtsamPose3(ground_constraint_pose);
+                gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(cloudKeyPoses6D->size() - 1, cloudKeyPoses6D->size(), poseFrom.between(ground_constraint), ground_constraint_noise));
+                aLoopIsClosed = true;
+            }
+            keyframe_add_ground_constraint = add_ground_constraint;
 #endif
             initialEstimate.insert(cloudKeyPoses3D->size(), poseTo);
         }

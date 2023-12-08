@@ -244,6 +244,7 @@ public:
     const double delta_t = 0;
 
     int key = 1;
+    bool frame_add_ground_constraint = false;
 
     // imu-lidar位姿变换
     //这点要注意，tixiaoshan这里命名的很垃圾，这只是一个平移变换，
@@ -439,13 +440,14 @@ public:
             key = 1;
         }
 
+        sensor_msgs::Imu *thisImu = nullptr;
         // 1. integrate imu data and optimize
         // 1. 计算前一帧与当前帧之间的imu预积分测量值并与 激光里程计增量(真值)比较做优化
         while (!imuQueOpt.empty())
         {
             // pop and integrate imu data that is between two optimizations
             // 提取前一帧与当前帧之间的imu数据，计算预积分
-            sensor_msgs::Imu *thisImu = &imuQueOpt.front();
+            thisImu = &imuQueOpt.front();
             double imuTime = ROS_TIME(thisImu);
             // currentCorrectionTime是当前帧激光里程计的时间
             if (imuTime < currentCorrectionTime - delta_t)
@@ -480,10 +482,22 @@ public:
         graphFactors.add(pose_factor);
 
 #ifdef Ground_Constraint
-        gtsam::Pose3 ground_constraint = gtsam::Pose3(gtsam::Rot3::RzRyRx(curPose.rotation().roll(), curPose.rotation().pitch(), curPose.rotation().yaw()),
-                                                      gtsam::Point3(curPose.translation().x(), curPose.translation().y(), prevPose_.translation().z()));
-        gtsam::noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1, 1, 1, 1, 1, 1e-3).finished());
-        graphFactors.add(gtsam::BetweenFactor<gtsam::Pose3>(X(key - 1), X(key), prevPose_.between(ground_constraint), ground_constraint_noise));
+        double imuRoll, imuPitch, imuYaw;
+        tf::Quaternion orientation_lidar;
+        tf::quaternionMsgToTF(thisImu->orientation, orientation_lidar);
+        tf::Matrix3x3(orientation_lidar).getRPY(imuRoll, imuPitch, imuYaw);
+        // ROS_INFO("rpy = (%f, %f, %f)", RAD2DEG(imuRoll), RAD2DEG(imuPitch), RAD2DEG(imuYaw));
+        bool add_ground_constraint = RAD2DEG(std::abs(imuRoll)) < 1 && RAD2DEG(std::abs(imuPitch)) < 1;
+        if (frame_add_ground_constraint && add_ground_constraint)
+        {
+            // ROS_WARN("add a ground constraint!");
+            gtsam::Pose3 ground_constraint = gtsam::Pose3(gtsam::Rot3::RzRyRx(prevPose_.rotation().roll(), prevPose_.rotation().pitch(), curPose.rotation().yaw()),
+                                                          gtsam::Point3(curPose.translation().x(), curPose.translation().y(), prevPose_.translation().z()));
+            gtsam::noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-2, 1e-2, 1, 1, 1, 1e-3).finished());
+            // gtsam::noiseModel::Diagonal::shared_ptr ground_constraint_noise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-3, 1e-3, 1, 1, 1, 1e-3).finished());
+            graphFactors.add(gtsam::BetweenFactor<gtsam::Pose3>(X(key - 1), X(key), prevPose_.between(ground_constraint), ground_constraint_noise));
+        }
+        frame_add_ground_constraint = add_ground_constraint;
 #endif
 
         // insert predicted values
@@ -497,9 +511,12 @@ public:
         optimizer.update(graphFactors, graphValues);
         optimizer.update();
 #ifdef Ground_Constraint
-        optimizer.update();
-        optimizer.update();
-        optimizer.update();
+        if (add_ground_constraint)
+        {
+            optimizer.update();
+            optimizer.update();
+            optimizer.update();
+        }
 #endif
         graphFactors.resize(0);
         graphValues.clear();
