@@ -181,7 +181,9 @@ public:
 
     FILE *file_pose_unoptimized;
     FILE *file_pose_optimized;
+#ifdef Ground_Constraint
     bool keyframe_add_ground_constraint = false;
+#endif
 
     mapOptimization()
     {

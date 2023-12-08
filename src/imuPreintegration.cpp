@@ -244,7 +244,9 @@ public:
     const double delta_t = 0;
 
     int key = 1;
+#ifdef Ground_Constraint
     bool frame_add_ground_constraint = false;
+#endif
 
     // imu-lidar位姿变换
     //这点要注意，tixiaoshan这里命名的很垃圾，这只是一个平移变换，
