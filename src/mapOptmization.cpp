@@ -1321,6 +1321,7 @@ public:
             // 变量节点设置初始值
 
 #ifdef Ground_Constraint
+            // TODO: make it more reasonable between two keyframes
             // ROS_INFO("rpy = (%f, %f, %f)", RAD2DEG(cloudInfo.imuRollInit), RAD2DEG(cloudInfo.imuPitchInit), RAD2DEG(cloudInfo.imuYawInit));
             bool add_ground_constraint = RAD2DEG(std::abs(cloudInfo.imuRollInit)) < 1 && RAD2DEG(std::abs(cloudInfo.imuPitchInit)) < 1;
             if (keyframe_add_ground_constraint && add_ground_constraint)
