@@ -37,7 +37,7 @@ lio_sam:
   imuGyrNoise: 1.7138381021653281e-03
   imuAccBiasN: 3.1255954720805698e-04
   imuGyrBiasN: 1.3365081877127647e-05
-  imuGravity: -9.80511
+  imuGravity: 9.80511
   imuRPYWeight: 0.01
 
   # Extrinsics: T_lb (lidar -> imu)
@@ -46,8 +46,8 @@ lio_sam:
                  0, -1, 0,
                  0, 0, -1]
   extrinsicRPY: [1, 0, 0,
-                 0, -1, 0,
-                 0, 0, -1]
+                 0, 1, 0,
+                 0, 0, 1]
 
   # LOAM feature threshold
   edgeThreshold: 1.0
