@@ -3,10 +3,10 @@
 
 struct VelodynePointXYZIRT
 {
-// #define VEL_TIMESTAMP_TYPE float
-#define VEL_TIMESTAMP_TYPE double
-// #define VEL_TIMESTAMP_FIELD time
-#define VEL_TIMESTAMP_FIELD timestamp
+#define VEL_TIMESTAMP_TYPE float
+// #define VEL_TIMESTAMP_TYPE double
+#define VEL_TIMESTAMP_FIELD time
+// #define VEL_TIMESTAMP_FIELD timestamp
 
     PCL_ADD_POINT4D
     PCL_ADD_INTENSITY;
@@ -274,7 +274,7 @@ public:
         // 取出激光点云队列中最早的一帧
         currentCloudMsg = std::move(cloudQueue.front());
         cloudQueue.pop_front();
-        if (sensor == SensorType::VELODYNE)
+        if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX)
         {
             // 转换成pcl点云格式 形参: (in,out)
             pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);
@@ -549,7 +549,7 @@ public:
 
         // 相对变换，提取增量平移、旋转（欧拉角）
         float rollIncre, pitchIncre, yawIncre;
- 
+
         // 给定的转换中，提取XYZ以及欧拉角,通过tranBt 获得增量值  后续去畸变用到
         pcl::getTranslationAndEulerAngles(transBt, odomIncreX, odomIncreY, odomIncreZ, rollIncre, pitchIncre, yawIncre);
 #endif
@@ -600,7 +600,7 @@ public:
 
         // 如果传感器移动速度较慢，例如人行走的速度，那么可以认为激光在一帧时间范围内，平移量小到可以忽略不计
         // If the sensor moves relatively slow, like walking speed, positional deskew seems to have little benefits. Thus code below is commented.
-#if 1
+#if 0
         if (cloudInfo.odomAvailable == false || odomDeskewFlag == false)
             return;
 
