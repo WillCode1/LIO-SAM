@@ -224,6 +224,8 @@ public:
         // 发布当前帧原始点云配准之后的点云
         pubCloudRegisteredRaw = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/cloud_registered_raw", 1);
 
+        pubSLAMInfo           = nh.advertise<lio_sam::cloud_info>("lio_sam/mapping/slam_info", 1);
+
         downSizeFilterCorner.setLeafSize(mappingCornerLeafSize, mappingCornerLeafSize, mappingCornerLeafSize);
         downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
         downSizeFilterICP.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
@@ -1273,6 +1275,13 @@ public:
     {
         if (cloudKeyPoses3D->points.empty())
             return true;
+#if 0
+        if (sensor == SensorType::LIVOX)
+        {
+            if (timeLaserInfoCur - cloudKeyPoses6D->back().time > 1.0)
+                return true;
+        }
+#endif
         // 前一帧位姿
         Eigen::Affine3f transStart = pclPointToAffine3f(cloudKeyPoses6D->back());
         // 当前帧位姿
