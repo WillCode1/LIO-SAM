@@ -60,7 +60,7 @@ typedef pcl::PointXYZI PointType;
 
 enum class SensorType { VELODYNE, OUSTER, LIVOX };
 
-#define Ground_Constraint
+// #define Ground_Constraint
 
 class ParamServer
 {
