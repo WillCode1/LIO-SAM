@@ -30,6 +30,7 @@ lio_sam:
   downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1
   lidarMinRange: 1.0                          # default: 1.0, minimum lidar range to be used
   lidarMaxRange: 1000.0                       # default: 1000.0, maximum lidar range to be used
+  timestampUnit: 1e-6f                        # defautt: 1e-6f, 1e-9 for 'ouster'
 
   # IMU Settings
   gravityUnit: 1

@@ -102,6 +102,7 @@ public:
     float lidarMaxRange;
 
     // IMU
+    float timestampUnit;
     float gravityUnit;
     float imuAccNoise;
     float imuGyrNoise;
@@ -174,6 +175,7 @@ public:
         nh.param<float>("lio_sam/gpsCovThreshold", gpsCovThreshold, 2.0);
         nh.param<float>("lio_sam/poseCovThreshold", poseCovThreshold, 25.0);
 
+        nh.param<float>("lio_sam/timestampUnit", timestampUnit, 1e-6f);
         nh.param<float>("lio_sam/gravityUnit", gravityUnit, 1);
         nh.param<bool>("lio_sam/savePCD", savePCD, false);
         nh.param<bool>("lio_sam/saveKeyFramesPCD", saveKeyFramesPCD, false);

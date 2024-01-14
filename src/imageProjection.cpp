@@ -3,10 +3,10 @@
 
 struct VelodynePointXYZIRT
 {
-#define VEL_TIMESTAMP_TYPE float
-// #define VEL_TIMESTAMP_TYPE double
-#define VEL_TIMESTAMP_FIELD time
-// #define VEL_TIMESTAMP_FIELD timestamp
+// #define VEL_TIMESTAMP_TYPE float
+#define VEL_TIMESTAMP_TYPE double
+// #define VEL_TIMESTAMP_FIELD time
+#define VEL_TIMESTAMP_FIELD timestamp
 
     PCL_ADD_POINT4D
     PCL_ADD_INTENSITY;
@@ -282,6 +282,7 @@ public:
             for (size_t i = 0; i < laserCloudIn->size(); i++)
             {
                 laserCloudIn->points[i].VEL_TIMESTAMP_FIELD -= offset_timestamp;
+                laserCloudIn->points[i].VEL_TIMESTAMP_FIELD *= timestampUnit;
             }
         }
         else if (sensor == SensorType::OUSTER)
@@ -299,7 +300,7 @@ public:
                 dst.z = src.z;
                 dst.intensity = src.intensity;
                 dst.ring = src.ring;
-                dst.VEL_TIMESTAMP_FIELD = src.t * 1e-9f;
+                dst.VEL_TIMESTAMP_FIELD = src.t * timestampUnit;
             }
         }
         else
