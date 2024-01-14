@@ -17,7 +17,7 @@ lio_sam:
   useGpsElevation: true                      # if GPS elevation is bad, set to "false"
   gpsCovThreshold: 2.0                        # m^2, threshold for using GPS data
   poseCovThreshold: 5.0                      # m^2, threshold for using GPS data
-  
+
   # Export settings
   savePCD: false                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
   saveKeyFramesPCD: false
