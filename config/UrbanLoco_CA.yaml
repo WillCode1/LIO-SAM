@@ -33,7 +33,7 @@ lio_sam:
   timestampUnit: 1e-6f                        # defautt: 1e-6f, 1e-9 for 'ouster'
 
   # IMU Settings
-  gravityUnit: 100                              # 9.8 or 1
+  gravityUnit: 1                              # 9.8 or 1
   imuAccNoise: 1.5139437109092027e-02
   imuGyrNoise: 1.7138381021653281e-03
   imuAccBiasN: 3.1255954720805698e-04
