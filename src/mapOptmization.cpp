@@ -1443,6 +1443,7 @@ public:
                 gtSAMgraph.add(gps_factor);
 
                 aLoopIsClosed = true;
+                ROS_WARN("add GPS Factor!");
                 break;
             }
         }
