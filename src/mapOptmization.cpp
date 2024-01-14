@@ -1374,12 +1374,14 @@ public:
             if (pointDistance(cloudKeyPoses3D->front(), cloudKeyPoses3D->back()) < 5.0)
                 return;
         }
+        ROS_WARN("111 = (%f, %f), %f!", poseCovariance(3, 3), poseCovariance(4, 4), poseCovThreshold);
 
         // pose covariance small, no need to correct
         // 位姿协方差很小，没必要加入GPS数据进行校正
         // 3和4我猜可能是x和y？（6维，roll，pitch，yaw，x，y，z）
         if (poseCovariance(3, 3) < poseCovThreshold && poseCovariance(4, 4) < poseCovThreshold)
             return;
+        ROS_WARN("222!");
 
         // last gps position
         static PointType lastGPSPoint;
@@ -1400,6 +1402,7 @@ public:
             }
             else
             {
+                ROS_WARN("333!");
                 nav_msgs::Odometry thisGPS = gpsQueue.front();
                 gpsQueue.pop_front();
                 // GPS噪声协方差太大，不能用
@@ -1410,6 +1413,7 @@ public:
                 if (noise_x > gpsCovThreshold || noise_y > gpsCovThreshold)
                     continue;
 
+                ROS_WARN("444!");
                 // GPS里程计位置
                 float gps_x = thisGPS.pose.pose.position.x;
                 float gps_y = thisGPS.pose.pose.position.y;
@@ -1420,11 +1424,13 @@ public:
                     noise_z = 0.01;
                 }
 
+                ROS_WARN("555!");
                 // GPS not properly initialized (0,0,0)
                 // (0,0,0)无效数据
                 if (abs(gps_x) < 1e-6 && abs(gps_y) < 1e-6)
                     continue;
 
+                ROS_WARN("666!");
                 // Add GPS every a few meters
                 // 每隔5m添加一个GPS里程计
                 PointType curGPSPoint;
@@ -1435,6 +1441,7 @@ public:
                     continue;
                 else
                     lastGPSPoint = curGPSPoint;
+                ROS_WARN("777!");
                 // 添加GPS因子
                 gtsam::Vector Vector3(3);
                 Vector3 << max(noise_x, 1.0f), max(noise_y, 1.0f), max(noise_z, 1.0f);
