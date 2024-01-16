@@ -1379,7 +1379,7 @@ public:
         // if (poseCovariance(3, 3) < poseCovThreshold && poseCovariance(4, 4) < poseCovThreshold)
         if (std::hypot(poseCovariance(3, 3), poseCovariance(4, 4)) < poseCovThreshold)
             return;
-        ROS_WARN("prepare to add GPS Factor!");
+        ROS_INFO("prepare to add GPS Factor!");
 
         // last gps position
         static PointType lastGPSPoint;
