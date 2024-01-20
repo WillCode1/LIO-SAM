@@ -1379,7 +1379,7 @@ public:
         // if (poseCovariance(3, 3) < poseCovThreshold && poseCovariance(4, 4) < poseCovThreshold)
         if (std::hypot(poseCovariance(3, 3), poseCovariance(4, 4)) < poseCovThreshold)
             return;
-        ROS_INFO("prepare to add GPS Factor!");
+        // ROS_INFO("try to add GPS Factor!");
 
         // last gps position
         static PointType lastGPSPoint;
@@ -1409,6 +1409,7 @@ public:
                 if (noise_x > gpsCovThreshold || noise_y > gpsCovThreshold)
                     continue;
 
+#if 0
                 float gps_x = thisGPS.pose.pose.position.x;
                 float gps_y = thisGPS.pose.pose.position.y;
                 float gps_z = thisGPS.pose.pose.position.z;
@@ -1431,10 +1432,26 @@ public:
                     continue;
                 else
                     lastGPSPoint = curGPSPoint;
+#endif
+
+                Eigen::Matrix4d extrinsic_lidar2gnss = Eigen::Matrix4d::Identity();
+                Eigen::Quaterniond gnss_quat(thisGPS.pose.pose.orientation.w, thisGPS.pose.pose.orientation.x,
+                                             thisGPS.pose.pose.orientation.y, thisGPS.pose.pose.orientation.z);
+                Eigen::Vector3d gnss_position(thisGPS.pose.pose.position.x, thisGPS.pose.pose.position.y, thisGPS.pose.pose.position.z);
+                Eigen::Matrix4d gnss_pose = Eigen::Matrix4d::Identity();
+                gnss_pose.topLeftCorner(3, 3) = gnss_quat.normalized().toRotationMatrix();
+                gnss_pose.topRightCorner(3, 1) = gnss_position;
+                gnss_pose *= extrinsic_lidar2gnss;
+                if (!useGpsElevation)
+                {
+                    gnss_pose(2, 3) = transformTobeMapped[5];
+                    noise_z = 0.01;
+                }
+
                 gtsam::Vector Vector3(3);
                 Vector3 << max(noise_x, 1.0f), max(noise_y, 1.0f), max(noise_z, 1.0f);
                 noiseModel::Diagonal::shared_ptr gps_noise = noiseModel::Diagonal::Variances(Vector3);
-                gtsam::GPSFactor gps_factor(cloudKeyPoses3D->size(), gtsam::Point3(gps_x, gps_y, gps_z), gps_noise);
+                gtsam::GPSFactor gps_factor(cloudKeyPoses3D->size(), gtsam::Point3(gnss_pose(0, 3), gnss_pose(1, 3), gnss_pose(2, 3)), gps_noise);
                 gtSAMgraph.add(gps_factor);
 
                 aLoopIsClosed = true;
