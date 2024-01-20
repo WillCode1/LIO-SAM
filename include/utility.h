@@ -117,6 +117,7 @@ public:
     Eigen::Matrix3d extRPY;
     Eigen::Vector3d extTrans;
     Eigen::Quaterniond extQRPY;
+    Eigen::Matrix4d extrinsic_lidar2gnss;
 
     // LOAM
     float edgeThreshold;
@@ -221,6 +222,19 @@ public:
         extRPY = Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>>(extRPYV.data(), 3, 3);
         extTrans = Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>>(extTransV.data(), 3, 1);
         extQRPY = Eigen::Quaterniond(extRPY).inverse();
+
+        // extrinsic lidar to gnss
+        vector<double> extrinsicR_gnss_vec;
+        vector<double> extrinsicT_gnss_vec;
+        Eigen::Matrix3d extrinsicR_gnss;
+        Eigen::Vector3d extrinsicT_gnss;
+        nh.param<vector<double>>("lio_sam/extrinsic_gnss_R", extrinsicR_gnss_vec, vector<double>());
+        nh.param<vector<double>>("lio_sam/extrinsic_gnss_T", extrinsicT_gnss_vec, vector<double>());
+        extrinsicR_gnss = Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>>(extrinsicR_gnss_vec.data(), 3, 3);
+        extrinsicT_gnss = Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>>(extrinsicT_gnss_vec.data(), 3, 1);
+        extrinsic_lidar2gnss = Eigen::Matrix4d::Identity();
+        extrinsic_lidar2gnss.topLeftCorner(3, 3) = extrinsicR_gnss;
+        extrinsic_lidar2gnss.topRightCorner(3, 1) = extrinsicT_gnss;
 
         nh.param<float>("lio_sam/edgeThreshold", edgeThreshold, 0.1);
         nh.param<float>("lio_sam/surfThreshold", surfThreshold, 0.1);

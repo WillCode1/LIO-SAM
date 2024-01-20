@@ -1434,7 +1434,6 @@ public:
                     lastGPSPoint = curGPSPoint;
 #endif
 
-                Eigen::Matrix4d extrinsic_lidar2gnss = Eigen::Matrix4d::Identity();
                 Eigen::Quaterniond gnss_quat(thisGPS.pose.pose.orientation.w, thisGPS.pose.pose.orientation.x,
                                              thisGPS.pose.pose.orientation.y, thisGPS.pose.pose.orientation.z);
                 Eigen::Vector3d gnss_position(thisGPS.pose.pose.position.x, thisGPS.pose.pose.position.y, thisGPS.pose.pose.position.z);
