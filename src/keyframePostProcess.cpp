@@ -50,12 +50,13 @@ void keyframePose2Text(pcl::PointCloud<PointTypePose>::Ptr keyframePoses, const 
 		{
 			outFile << i + 1 << ',' << keyframePoses->points[i].x << ',' << keyframePoses->points[i].y << ',' << keyframePoses->points[i].z << ','
 					<< keyframePoses->points[i].roll << ',' << keyframePoses->points[i].pitch << ',' << keyframePoses->points[i].yaw << endl;
+			continue;
 		}
 		Eigen::AngleAxisf roll(keyframePoses->points[i].roll, Eigen::Vector3f::UnitX());
 		Eigen::AngleAxisf pitch(keyframePoses->points[i].pitch, Eigen::Vector3f::UnitY());
 		Eigen::AngleAxisf yaw(keyframePoses->points[i].yaw, Eigen::Vector3f::UnitZ());
 		Eigen::Quaternionf quat = yaw * pitch * roll;
-		if (type == 1)
+		if (type == 1)	// Quaternion
 		{
 			outFile << i + 1 << ',' << keyframePoses->points[i].x << ',' << keyframePoses->points[i].y << ',' << keyframePoses->points[i].z << ','
 					<< quat.w() << ',' << quat.x() << ',' << quat.y() << ',' << quat.z() << endl;
@@ -63,11 +64,17 @@ void keyframePose2Text(pcl::PointCloud<PointTypePose>::Ptr keyframePoses, const 
 		else if (type == 2)
 		{
 			Eigen::Matrix4f mat = Eigen::Matrix4f::Identity();
-			mat.topLeftCorner(3,3) = quat.toRotationMatrix();
-			mat.topRightCorner(3,1) = Eigen::Vector3f(keyframePoses->points[i].x, keyframePoses->points[i].y, keyframePoses->points[i].z);
+			mat.topLeftCorner(3, 3) = quat.toRotationMatrix();
+			mat.topRightCorner(3, 1) = Eigen::Vector3f(keyframePoses->points[i].x, keyframePoses->points[i].y, keyframePoses->points[i].z);
+#if 0
 			outFile << i + 1 << ',' << mat(0, 0) << ',' << mat(0, 1) << ',' << mat(0, 2) << ','
 					<< mat(1, 0) << ',' << mat(1, 1) << ',' << mat(1, 2) << ','
 					<< mat(2, 0) << ',' << mat(2, 1) << ',' << mat(2, 2) << ',' << endl;
+#else
+			outFile << i + 1 << ',' << mat(0, 0) << ',' << mat(0, 1) << ',' << mat(0, 2) << ',' << mat(0, 3) << ','
+					<< mat(1, 0) << ',' << mat(1, 1) << ',' << mat(1, 2) << ',' << mat(1, 3) << ','
+					<< mat(2, 0) << ',' << mat(2, 1) << ',' << mat(2, 2) << ',' << mat(2, 3) << endl;
+#endif
 		}
 	}
 	outFile.close();
